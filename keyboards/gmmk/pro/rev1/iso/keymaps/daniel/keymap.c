@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "keymap_us_international.h"
 #include "sendstring_us_international.h"
 #include "rgb_matrix_map.h"
-#include "print.h"
 
 #include "timer.h"
 
@@ -188,120 +187,64 @@ const uint8_t led_location_map_sorted_to_actual[] = {
     [83] = LED_RIGHT, // 79, Right, k05
 };
 
-uint8_t get_mapped_led_index(uint8_t sorted_index) {
-    return led_location_map_sorted_to_actual[sorted_index];
-}
+// uint8_t get_mapped_led_index(uint8_t sorted_index) {
+//     return led_location_map_sorted_to_actual[sorted_index];
+// }
 
-KeyPosition addkey(uint16_t _row, uint16_t _col, uint8_t layer, uint8_t r, uint8_t g, uint8_t b) {
-    if (_row < MATRIX_ROWS) {
-        uprintf("row kleiner matrix\n");
-        if (_col < MATRIX_COLS) {
-            uprintf("col kleiner matrix\n");
-            uint16_t keycode = keymaps[layer][_row][_col];
-            if (keycode != KC_NO) {
-                uint8_t sorted_index     = _row * MATRIX_COLS + _col;
-                uint8_t actual_led_index = get_mapped_led_index(sorted_index);
-                rgb_matrix_set_color(actual_led_index, r, g, b);
-                uprintf("Current index: row=%d, col=%d, sorted_index=%d, actual_led_index=%d\n", _row, _col, sorted_index, actual_led_index);
-                _col++;
-                KeyPosition pos = {_row, _col};
-                return pos;
-            }
-        } else {
-            _col = 0;
-            _row++;
-            KeyPosition pos = {_row, _col};
-            return pos;
-        }
-    }
-    KeyPosition pos = {_row, _col};
-    return pos;
-}
-uint8_t actual_led_index = 0;
+// uint8_t actual_led_index = 0;
 
-uint8_t blink_key(uint16_t index) {
-    actual_led_index = get_mapped_led_index(index);
-    index++;
-    return index;
-}
+// void blink_all_keys(void) {
+//     uprintf("%d\n", led_index);
 
-void custom_led_parsing(uint8_t layer, uint8_t r, uint8_t g, uint8_t b) {
-    static uint8_t row = 0;
-    static uint8_t col = 0;
-    // static bool     first_run       = true;
-    static uint32_t cycle_led_timer = 0;
-    // uprintf("First run: %d\n", first_run);
-
-    // if (first_run) {
-    //     first_run = false;
-    //     row       = 0;
-    //     col       = 0;
-    // }
-
-    if (timer_elapsed32(cycle_led_timer) > 500) {
-        uprintf("Current value: row=%d, col=%d\n", row, col);
-        KeyPosition pos = addkey(row, col, layer, r, g, b);
-        row             = pos.row;
-        col             = pos.col;
-
-        uprintf("elapsed: %ld\n", cycle_led_timer);
-        cycle_led_timer = timer_read32();
-    }
-}
-
-void blink_all_keys(void) {
-    uprintf("%d\n", led_index);
-    led_index = blink_key(led_index);
-    uprintf("led-id: %d\n", actual_led_index);
-}
+//     actual_led_index = get_mapped_led_index(led_index);
+//     led_index++;
+//     uprintf("led-id: %d\n", actual_led_index);
+// }
 bool rgb_matrix_indicators_user(void) {
     for (uint8_t i = 0; i < sizeof(LED_LIST_CUSTOM_KEYCAPS); i++) {
-        rgb_matrix_set_color(LED_LIST_CUSTOM_KEYCAPS[i], 0, 255, 0);
+        rgb_matrix_set_color(LED_LIST_CUSTOM_KEYCAPS[i], 50, 255, 0);
     }
 
     // custom_led_parsing(1, 255, 0, 0); // Setzt alle Tasten im Layer 1 auf Rot
 
     return false;
 }
-
-bool process_record_user(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case KC_RCTL:
-            if (record->event.pressed) {
-                blink_all_keys();
-            }
-            return false; // Skip all further processing of this key
-        default:
-            return true; // Process all other keycodes normally
-    }
-}
+// for debugging
+// bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+//     switch (keycode) {
+//         case KC_RCTL:
+//             if (record->event.pressed) {
+//                 blink_all_keys();
+//             }
+//             return false; // Skip all further processing of this key
+//         default:
+//             return true; // Process all other keycodes normally
+//     }
+// }
 
 #ifdef RGB_MATRIX_ENABLE
 // caps log flash side bars red, press fn and all mapped keys are highlighted red
 bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-    rgb_matrix_set_color(actual_led_index, 255, 0, 0);
-    // static uint32_t cycle_led_timer    = 0;
-    // static uint8_t  current_value      = 0;
-    // static uint8_t  left_side_leds[8]  = {68, 71, 74, 77, 81, 84, 88, 92};
-    // static uint8_t  right_side_leds[8] = {69, 72, 75, 78, 82, 85, 89, 93};
+    static uint32_t cycle_led_timer    = 0;
+    static uint8_t  current_value      = 0;
+    static uint8_t  left_side_leds[8]  = {68, 71, 74, 77, 81, 84, 88, 92};
+    static uint8_t  right_side_leds[8] = {69, 72, 75, 78, 82, 85, 89, 93};
 
-    // custom_led_parsing(0, 255, 0, 0);
+    if (host_keyboard_led_state().caps_lock) {
+        if (timer_elapsed32(cycle_led_timer) > 500) {
+            current_value   = current_value == 0 ? 255 : 0;
+            cycle_led_timer = timer_read32();
+        }
 
-    // // if (host_keyboard_led_state().caps_lock) {
-    // //     if (timer_elapsed32(cycle_led_timer) > 500) {
-    // //         current_value   = current_value == 0 ? 255 : 0;
-    // //         cycle_led_timer = timer_read32();
-    // //     }
+        HSV tempHSV = {.h = 0, .s = 255, .v = current_value};
+        RGB tempRGB = hsv_to_rgb(tempHSV);
 
-    // //     HSV tempHSV = {.h = 0, .s = 255, .v = current_value};
-    // //     RGB tempRGB = hsv_to_rgb(tempHSV);
-
-    // //     for (uint8_t i = 0; i < sizeof(left_side_leds) / sizeof(left_side_leds[0]); i++) {
-    // //         rgb_matrix_set_color(left_side_leds[i], tempRGB.r, tempRGB.g, tempRGB.b);
-    // //         rgb_matrix_set_color(right_side_leds[i], tempRGB.r, tempRGB.g, tempRGB.b);
-    // //         RGB_MATRIX_INDICATOR_SET_COLOR(LED_CAPS, tempRGB.r, tempRGB.g, tempRGB.b);
-    // //     }
-    // // }
+        for (uint8_t i = 0; i < sizeof(left_side_leds) / sizeof(left_side_leds[0]); i++) {
+            rgb_matrix_set_color(left_side_leds[i], tempRGB.r, tempRGB.g, tempRGB.b);
+            rgb_matrix_set_color(right_side_leds[i], tempRGB.r, tempRGB.g, tempRGB.b);
+            RGB_MATRIX_INDICATOR_SET_COLOR(LED_CAPS, tempRGB.r, tempRGB.g, tempRGB.b);
+        }
+    }
 
     return false;
 }
