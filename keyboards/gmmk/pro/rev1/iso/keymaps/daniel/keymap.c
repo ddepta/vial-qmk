@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "keymap_us_international.h"
 #include "sendstring_us_international.h"
 #include "rgb_matrix_map.h"
+#include "print.h"
 
 #include "timer.h"
 
@@ -47,16 +48,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_ESC,  KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,   KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  KC_PSCR,          KC_MUTE,
         KC_GRV,  KC_1,    KC_2,    KC_3,    KC_4,    KC_5,    KC_6,    KC_7,    KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,  KC_BSPC,          KC_INS,
         KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,    KC_Z,    KC_U,    KC_I,    KC_O,    KC_P,    KC_LBRC, KC_RBRC,                   KC_DEL,
-        KC_CAPS, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT, KC_NUHS, KC_ENT,           KC_HOME,
+        KC_CAPS, KC_A,    KC_S,    KC_D,    KC_F,    KC_G,    KC_H,    KC_J,    KC_K,    KC_L,    KC_SCLN, KC_QUOT, US_HASH, KC_ENT,           KC_HOME,
         KC_LSFT, KC_NUBS, KC_Y,    KC_X,    KC_C,    KC_V,    KC_B,    KC_N,    KC_M,    KC_COMM, KC_DOT,  KC_SLSH,          KC_RSFT, KC_UP,   KC_END,
         KC_LCTL, KC_LGUI, KC_LALT,                            KC_SPC,                             KC_RALT, MO(1),   KC_RCTL, KC_LEFT, KC_DOWN, KC_RGHT
     ),
 
-    [1] = LAYOUT(y
-        _______, KC_MYCM, KC_WHOM, KC_CALC, KC_MSEL, KC_MPRV, KC_MNXT, KC_MPLY, KC_MSTP, KC_MUTE, KC_VOLD, KC_VOLU, _______, _______,          _______,
+    // length 84
+
+    [1] = LAYOUT(
+        _______, KC_MYCM, KC_WHOM, KC_CALC, KC_MSEL, KC_MPRV, KC_MNXT, KC_MPLY, KC_MSTP, KC_MUTE, KC_VOLD, KC_VOLU, _______, _______,          KC_PWR,
         _______, RGB_TOG, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, QK_BOOT,          _______,
         _______, US_AT,   _______, US_EURO, RGB_VAI, _______, _______, US_UDIA, _______, US_ODIA, _______, _______, _______,                   _______,
-        _______, US_ADIA, US_SS,   _______, RGB_VAD, _______, _______, _______, _______, _______, _______, _______, _______, _______,          KC_PGUP,
+        _______, US_ADIA, US_SS,   _______, RGB_VAD, _______, _______, _______, _______, _______, _______, _______, US_DCIR, _______,          KC_PGUP,
         _______, _______, _______, _______, RGB_HUI, _______, _______, NK_TOGG, _______, _______, _______, _______,          _______, RGB_MOD, KC_PGDN,
         _______, _______, _______,                            _______,                            _______, _______, _______, RGB_SPD, RGB_RMOD, RGB_SPI
     ),
@@ -80,107 +83,226 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
 
 };
-// clang-format on
 
+typedef struct {
+    uint8_t row;
+    uint8_t col;
+} KeyPosition;
+// clang-format on
+uint8_t                led_index                      = 0;
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][2] = {
-    [0] = {ENCODER_CCW_CW(KC_TRNS, KC_TRNS)},
-    [1] = {ENCODER_CCW_CW(KC_TRNS, KC_TRNS)},
+    [0] = {ENCODER_CCW_CW(KC_VOLD, KC_VOLU)},
+    [1] = {ENCODER_CCW_CW(RGB_VAD, RGB_VAI)},
     [2] = {ENCODER_CCW_CW(KC_TRNS, KC_TRNS)},
     [3] = {ENCODER_CCW_CW(KC_TRNS, KC_TRNS)},
 };
+const uint8_t led_location_map_sorted_to_actual[] = {
+    [0]  = LED_ESC, // 0, ESC, k13
+    [1]  = LED_F1,  // 6, F1, k26
+    [2]  = LED_F2,  // 12, F2, k36
+    [3]  = LED_F3,  // 18, F3, k31
+    [4]  = LED_F4,  // 23, F4, k33
+    [5]  = LED_F5,  // 28, F5, k07
+    [6]  = LED_F6,  // 34, F6, k63
+    [7]  = LED_F7,  // 39, F7, k71
+    [8]  = LED_F8,  // 44, F8, k76
+    [9]  = LED_F9,  // 50, F9, ka6
+    [10] = LED_F10, // 56, F10, ka7
+    [11] = LED_F11, // 61, F11, ka3
+    [12] = LED_F12, // 66, F12, ka5
+    [13] = LED_PRT, // 69, Prt, k97  -- re
+    [14] = LED_PRT, // rotary knob
 
-// #ifdef RGB_MATRIX_ENABLE
-// bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
-//     if (IS_HOST_LED_ON(USB_LED_CAPS_LOCK)) {
-//         rgb_matrix_set_color(3, 0, 255, 0);  // capslock key
-//         rgb_matrix_set_color(67, 0, 255, 0); // Side led 01
-//         rgb_matrix_set_color(70, 0, 255, 0); // Side led 02
-//         rgb_matrix_set_color(73, 0, 255, 0); // Side led 03
-//         rgb_matrix_set_color(76, 0, 255, 0); // Side led 04
-//         rgb_matrix_set_color(80, 0, 255, 0); // Side led 05
-//         rgb_matrix_set_color(83, 0, 255, 0); // Side led 06
-//         rgb_matrix_set_color(87, 0, 255, 0); // Side led 07
-//         rgb_matrix_set_color(91, 0, 255, 0); // Side led 08
-//     }
-//     return false; // Hinzufügen dieser Zeile
-// }
-// #endif
+    [15] = LED_GRV,  // 1, ~, k16
+    [16] = LED_1,    // 7, 1, k17
+    [17] = LED_2,    // 13, 2, k27
+    [18] = LED_3,    // 19, 3, k37
+    [19] = LED_4,    // 24, 4, k47
+    [20] = LED_5,    // 29, 5, k46
+    [21] = LED_6,    // 35, 6, k56
+    [22] = LED_7,    // 40, 7, k57
+    [23] = LED_8,    // 45, 8, k67
+    [24] = LED_9,    // 51, 9, k77
+    [25] = LED_0,    // 57, 0, k87
+    [26] = LED_MINS, // 62, -, k86
+    [27] = LED_EQL,  // 78, =, k66
+    [28] = LED_BSPC, // 85, BSpc, ka1
+    [29] = LED_INS,  // 72, Del, k65
 
-bool rgb_matrix_indicators_user(void) {
-    led_t led_state = host_keyboard_led_state();
-    if (led_state.caps_lock) {
-        // rgb_matrix_set_color(i, r, g, b)
-        // rgb_matrix_set_color(3, 255, 0, 0) // Uncomment for GMMK Pro
-        // rgb_matrix_set_color(30, 255, 0, 0) // Uncomment for GMMK2
-        // rgb_matrix_set_color(3, 0, 255, 0);  // capslock key
-        // rgb_matrix_set_color(67, 0, 255, 0); // Side led 01
-        // rgb_matrix_set_color(70, 0, 255, 0); // Side led 02
-        // rgb_matrix_set_color(73, 0, 255, 0); // Side led 03
-        // rgb_matrix_set_color(76, 0, 255, 0); // Side led 04
-        // rgb_matrix_set_color(80, 0, 255, 0); // Side led 05
-        // rgb_matrix_set_color(83, 0, 255, 0); // Side led 06
-        // rgb_matrix_set_color(87, 0, 255, 0); // Side led 07
-        // rgb_matrix_set_color(91, 0, 255, 0); // Side led 08
-        // rgb_matrix_set_color(LED_L1, RGB_RED);cc
-        // rgb_matrix_set_color(LED_L2, RGB_RED);
-        // rgb_matrix_set_color(LED_L3, RGB_RED);
-        // rgb_matrix_set_color(LED_L4, RGB_RED);
-        // rgb_matrix_set_color(LED_L5, RGB_RED);
-        // rgb_matrix_set_color(LED_L6, RGB_RED);
-        // rgb_matrix_set_color(LED_L7, RGB_RED);
-        // rgb_matrix_set_color(LED_L8, RGB_RED);
-        // rgb_matrix_set_color(LED_R1, RGB_RED);
-        // rgb_matrix_set_color(LED_R2, RGB_RED);
-        // rgb_matrix_set_color(LED_R3, RGB_RED);
-        // rgb_matrix_set_color(LED_R4, RGB_RED);
-        // rgb_matrix_set_color(LED_R5, RGB_RED);
-        // rgb_matrix_set_color(LED_R6, RGB_RED);
-        // rgb_matrix_set_color(LED_R7, RGB_RED);
-        // rgb_matrix_set_color(LED_R8, RGB_RED);
-        rgb_matrix_set_color(3, 0, 255, 0);  // capslock key
-        rgb_matrix_set_color(68, 0, 255, 0); // side led 01
-        rgb_matrix_set_color(71, 0, 255, 0); // side led 02
-        rgb_matrix_set_color(74, 0, 255, 0); // side led 03
-        rgb_matrix_set_color(77, 0, 255, 0); // side led 04
-        rgb_matrix_set_color(81, 0, 255, 0); // side led 05
-        rgb_matrix_set_color(84, 0, 255, 0); // side led 06
-        rgb_matrix_set_color(88, 0, 255, 0); // side led 07
-        rgb_matrix_set_color(92, 0, 255, 0); // side led 08
-        rgb_matrix_set_color(69, 0, 255, 0); // side led 12
-        rgb_matrix_set_color(72, 0, 255, 0); // side led 13
-        rgb_matrix_set_color(75, 0, 255, 0); // side led 14
-        rgb_matrix_set_color(78, 0, 255, 0); // side led 15
-        rgb_matrix_set_color(82, 0, 255, 0); // side led 16
-        rgb_matrix_set_color(85, 0, 255, 0); // side led 17
-        rgb_matrix_set_color(89, 0, 255, 0); // side led 18
-        rgb_matrix_set_color(93, 0, 255, 0); // side led 19;
+    [30] = LED_TAB,  // 2, Tab, k11
+    [31] = LED_Q,    // 8, Q, k10
+    [32] = LED_W,    // 14, W, k20
+    [33] = LED_E,    // 20, E, k30
+    [34] = LED_R,    // 25, R, k40
+    [35] = LED_T,    // 30, T, k41
+    [36] = LED_Y,    // 36, Y, k51
+    [37] = LED_U,    // 41, U, k50
+    [38] = LED_I,    // 46, I, k60
+    [39] = LED_O,    // 52, O, k70
+    [40] = LED_P,    // 58, P, k80
+    [41] = LED_LBRC, // 63, [, k81
+    [42] = LED_RBRC, // 89, ], k61
+    [43] = LED_DEL,  // 75, PgUp, k15 <---
+
+    [44] = LED_CAPS,      // 3, Caps, k21
+    [45] = LED_A,         // 9, A, k12
+    [46] = LED_S,         // 15, S, k22
+    [47] = LED_D,         // 21, D, k32
+    [48] = LED_F,         // 26, F, k42
+    [49] = LED_G,         // 31, G, k43
+    [50] = LED_H,         // 37, H, k53
+    [51] = LED_J,         // 42, J, k52
+    [52] = LED_K,         // 47, K, k62
+    [53] = LED_L,         // 53, L, k72
+    [54] = LED_SCLN,      // 59, ;, k82
+    [55] = LED_QUOT,      // 64, ", k83
+    [56] = LED_RBACKSLSH, // 80, LED, l05 M
+    [57] = LED_ENT,       // 96, Enter, ka4
+    [58] = LED_HOME,      // 86, PgDn, k25
+
+    [59] = LED_LSFT,  // 4, Sh_L, k00
+    [60] = LED_BSLS,  // 93, \, ka2
+    [61] = LED_Z,     // 10, Z, k14
+    [62] = LED_X,     // 16, X, k24
+    [63] = LED_C,     // 22, C, k34
+    [64] = LED_V,     // 27, V, k44
+    [65] = LED_B,     // 32, B, k45
+    [66] = LED_N,     // 38, N, k55
+    [67] = LED_M,     // 43, M, k54
+    [68] = LED_COMM,  // 48, ,, k64
+    [69] = LED_DOT,   // 54, ., k74
+    [70] = LED_RSLSH, // 60, ?, k85
+    [71] = LED_RSFT,  // 90, Sh_R, k91
+    [72] = LED_UP,    // 94, Up, k35
+    [73] = LED_END,   // 82, End, k75 <---
+
+    [74] = LED_LCTL,  // 5, Ct_L, k06
+    [75] = LED_LWIN,  // 11, Win_L, k90
+    [76] = LED_LALT,  // 17, Alt_L, k93
+    [77] = LED_SPC,   // 33, SPACE, k94
+    [78] = LED_RALT,  // 49, Alt_R, k95
+    [79] = LED_FN,    // 55, FN, k92
+    [80] = LED_RCTL,  // 65, Ct_R, k04
+    [81] = LED_LEFT,  // 95, Left, k03
+    [82] = LED_DOWN,  // 97, Down, k73
+    [83] = LED_RIGHT, // 79, Right, k05
+};
+
+uint8_t get_mapped_led_index(uint8_t sorted_index) {
+    return led_location_map_sorted_to_actual[sorted_index];
+}
+
+KeyPosition addkey(uint16_t _row, uint16_t _col, uint8_t layer, uint8_t r, uint8_t g, uint8_t b) {
+    if (_row < MATRIX_ROWS) {
+        uprintf("row kleiner matrix\n");
+        if (_col < MATRIX_COLS) {
+            uprintf("col kleiner matrix\n");
+            uint16_t keycode = keymaps[layer][_row][_col];
+            if (keycode != KC_NO) {
+                uint8_t sorted_index     = _row * MATRIX_COLS + _col;
+                uint8_t actual_led_index = get_mapped_led_index(sorted_index);
+                rgb_matrix_set_color(actual_led_index, r, g, b);
+                uprintf("Current index: row=%d, col=%d, sorted_index=%d, actual_led_index=%d\n", _row, _col, sorted_index, actual_led_index);
+                _col++;
+                KeyPosition pos = {_row, _col};
+                return pos;
+            }
+        } else {
+            _col = 0;
+            _row++;
+            KeyPosition pos = {_row, _col};
+            return pos;
+        }
     }
+    KeyPosition pos = {_row, _col};
+    return pos;
+}
+uint8_t actual_led_index = 0;
+
+uint8_t blink_key(uint16_t index) {
+    actual_led_index = get_mapped_led_index(index);
+    index++;
+    return index;
+}
+
+void custom_led_parsing(uint8_t layer, uint8_t r, uint8_t g, uint8_t b) {
+    static uint8_t row = 0;
+    static uint8_t col = 0;
+    // static bool     first_run       = true;
+    static uint32_t cycle_led_timer = 0;
+    // uprintf("First run: %d\n", first_run);
+
+    // if (first_run) {
+    //     first_run = false;
+    //     row       = 0;
+    //     col       = 0;
+    // }
+
+    if (timer_elapsed32(cycle_led_timer) > 500) {
+        uprintf("Current value: row=%d, col=%d\n", row, col);
+        KeyPosition pos = addkey(row, col, layer, r, g, b);
+        row             = pos.row;
+        col             = pos.col;
+
+        uprintf("elapsed: %ld\n", cycle_led_timer);
+        cycle_led_timer = timer_read32();
+    }
+}
+
+void blink_all_keys(void) {
+    uprintf("%d\n", led_index);
+    led_index = blink_key(led_index);
+    uprintf("led-id: %d\n", actual_led_index);
+}
+bool rgb_matrix_indicators_user(void) {
+    for (uint8_t i = 0; i < sizeof(LED_LIST_CUSTOM_KEYCAPS); i++) {
+        rgb_matrix_set_color(LED_LIST_CUSTOM_KEYCAPS[i], 0, 255, 0);
+    }
+
+    // custom_led_parsing(1, 255, 0, 0); // Setzt alle Tasten im Layer 1 auf Rot
+
     return false;
 }
 
-// static uint8_t  current_led = 0;
-// static uint16_t last_update = 0;
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case KC_RCTL:
+            if (record->event.pressed) {
+                blink_all_keys();
+            }
+            return false; // Skip all further processing of this key
+        default:
+            return true; // Process all other keycodes normally
+    }
+}
 
-// void update_leds(void) {
-//     if (timer_elapsed(last_update) > 500) { // 1000 ms = 1 second
-//         // Set the current LED to green
-//         rgb_matrix_set_color(current_led, 255, 0, 0);
-//         // Move to the next LED
-//         current_led = (current_led + 1) % 98;
-//         // Update the last update time
-//         last_update = timer_read();
-//     }
-// }
+#ifdef RGB_MATRIX_ENABLE
+// caps log flash side bars red, press fn and all mapped keys are highlighted red
+bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
+    rgb_matrix_set_color(actual_led_index, 255, 0, 0);
+    // static uint32_t cycle_led_timer    = 0;
+    // static uint8_t  current_value      = 0;
+    // static uint8_t  left_side_leds[8]  = {68, 71, 74, 77, 81, 84, 88, 92};
+    // static uint8_t  right_side_leds[8] = {69, 72, 75, 78, 82, 85, 89, 93};
 
-// bool rgb_matrix_indicators_user(void) {
-//     led_t led_state = host_keyboard_led_state();
-//     if (led_state.caps_lock) {
-//         // Reset all LEDs to off
-//         // for (uint8_t i = 0; i < 98; i++) {
-//         //     rgb_matrix_set_color(i, 0, 0, 0);
-//         // }
+    // custom_led_parsing(0, 255, 0, 0);
 
-//         update_leds();
-//     }
-//     return false;
-// }
+    // // if (host_keyboard_led_state().caps_lock) {
+    // //     if (timer_elapsed32(cycle_led_timer) > 500) {
+    // //         current_value   = current_value == 0 ? 255 : 0;
+    // //         cycle_led_timer = timer_read32();
+    // //     }
+
+    // //     HSV tempHSV = {.h = 0, .s = 255, .v = current_value};
+    // //     RGB tempRGB = hsv_to_rgb(tempHSV);
+
+    // //     for (uint8_t i = 0; i < sizeof(left_side_leds) / sizeof(left_side_leds[0]); i++) {
+    // //         rgb_matrix_set_color(left_side_leds[i], tempRGB.r, tempRGB.g, tempRGB.b);
+    // //         rgb_matrix_set_color(right_side_leds[i], tempRGB.r, tempRGB.g, tempRGB.b);
+    // //         RGB_MATRIX_INDICATOR_SET_COLOR(LED_CAPS, tempRGB.r, tempRGB.g, tempRGB.b);
+    // //     }
+    // // }
+
+    return false;
+}
+#endif

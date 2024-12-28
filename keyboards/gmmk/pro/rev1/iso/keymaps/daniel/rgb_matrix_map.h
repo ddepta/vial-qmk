@@ -1,135 +1,266 @@
-/* Copyright 2021 Jonavin Eng
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
+/* Copyright 2021 Jonavin Eng @Jonavin
+   Copyright 2022 gourdo1 <jcblake@outlook.com>
+   Copyright 2022 subhead @subhead
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 #ifdef RGB_MATRIX_ENABLE
+// Custom GMMK Pro-specific RGB color customizations (defaults found in quantum/color.h)
+#    define RGB_GODSPEED 0x00, 0xE4, 0xFF     // color for matching keycaps
+#    define RGB_NAUTILUS 0x00, 0xA4, 0xA9     // Nautilus Font colors
+#    define RGB_OFFBLUE 0x00, 0x80, 0xFF      // new color: blue with a hint of green
+#    define RGB_DKRED 0x28, 0x00, 0x00        // new color: dark red
+#    define RGB_ORANGE2 0xFF, 0x28, 0x00      // fix: reduced green from 80 to 28
+#    define RGB_PURPLE2 0x80, 0x00, 0xFF      // fix: increased red from 7A to 80
+#    define RGB_SPRINGGREEN2 0x00, 0xFF, 0x10 // fix: blue was 80, now 10
+#    define RGB_YELLOW2 0xFF, 0xB0, 0x00      // fix: green was FF, now B0
+#    define RGB_OFF RGB_BLACK
+
+// Added by gourdo1 for RGB testing
+//                Red   Green Blue          Expected  GMMK Pro result
+#    define RGB_TEST1 0xFF, 0x00, 0x00  // Q - red       good!
+#    define RGB_TEST2 0x0F, 0xFF, 0x00  // W - green     good!
+#    define RGB_TEST3 0x00, 0x00, 0xFF  // E - blue      good!
+#    define RGB_TEST4 0xFF, 0xB0, 0x00  // R - yellow    slightly green heavy - reduced green LED by quite a bit
+#    define RGB_TEST5 0x00, 0xFF, 0xFF  // T - cyan      good!
+#    define RGB_TEST6 0xFF, 0x00, 0xFF  // Y - magenta   very slightly blue heavy?
+#    define RGB_TEST7 0xFF, 0x28, 0x00  // U - orange    very green heavy at default
+#    define RGB_TEST8 0xFF, 0x00, 0x80  // I - pink      good!
+#    define RGB_TEST9 0x80, 0xFF, 0x00  // O - chartreus good!
+#    define RGB_TEST10 0x00, 0xFF, 0x10 // P - springgrn fixed: was too blue because green LED has blue in it already
+#    define RGB_TEST11 0x00, 0x80, 0xFF // A - grn blue  good!
+#    define RGB_TEST12 0x80, 0x00, 0xFF // S - purple    good!
 
 // RGB LED locations
 enum led_location_map {
-    LED_LSFT,  // 0, Sh_L, k13
-    LED_LEFT,  // 1, Left, k16
-    LEB_RCTL,  // 2, Ct_R, k11
-    LED_RIGHT, // 3, Right, k21
-    LED_LCTL,  // 4, Ct_L, k00
-    LED_F5,    // 5, F5, k06
-    LED_Q,     // 6, Q, k26
-    LED_TAB,   // 7, Tab, k17
-    LED_A,     // 8, A, k10
-    LED_ESC,   // 9, Esc, k12
-    LED_Z,     // 10, Z, k14
-    LED_PGUP,  // 11, PgUp, k90
-    LED_GRV,   // 12, ~, k36
-    LED_1,     // 13, 1, k27
-    LED_W,     // 14, W, k20
-    LED_CAPS,  // 15, Caps, k22
-    LED_S,     // 16, S, k24
-    LED_X,     // 17, X, k93
-    LED_PGDN,  // 18, PgDn, k31
-    LED_F1,    // 19, F1, k37
-    LED_2,     // 20, 2, k30
-    LED_E,     // 21, E, k32
-    LED_F3,    // 22, F3, k34
-    LED_D,     // 23, D, k33
-    LED_F4,    // 24, F4, k47
-    LED_C,     // 25, C, k40
-    LED_UP,    // 26, Up, k42
-    LED_F2,    // 27, F2, k44
-    LED_3,     // 28, 3, k07
-    LED_R,     // 29, R, k46
-    LED_T,     // 30, T, k41
-    LED_F,     // 31, F, k43
-    LED_G,     // 32, G, k45
-    LED_V,     // 33, V, k94
-    LED_B,     // 34, B, k63
-    LED_5,     // 35, 5, k56
-    LED_4,     // 36, 4, k51
-    LED_U,     // 37, U, k53
-    LED_Y,     // 38, Y, k55
-    LED_J,     // 39, J, k71
-    LED_H,     // 40, H, k57
-    LED_M,     // 41, M, k50
-    LED_N,     // 42, N, k52
-    LED_6,     // 43, 6, k54
-    LED_7,     // 44, 7, k76
-    LED_I,     // 45, I, k67
-    LED_RBRC,  // 46, ], k60
-    LED_K,     // 47, K, k62
-    LED_F6,    // 48, F6, k64
-    LED_COMM,  // 49, ,, k95
-    LED_HOME,  // 50, Home, ka6
-    LED_EQL,   // 51, =, k77
-    LED_8,     // 52, 8, k70
-    LED_O,     // 53, O, k72
-    LED_F7,    // 54, F7, k74
-    LED_L,     // 55, L, k92
-    LED_DOWN,  // 56, Down, ka7
-    LED_DOT,   // 57, ., k87
-    LED_END,   // 58, End, k80
-    LED_F8,    // 59, F8, k82
-    LED_9,     // 60, 9, k85
-    LED_P,     // 61, P, ka3
-    LED_LBRC,  // 62, [, k86
-    LED_SCLN,  // 63, ;, k81
-    LED_QUOT,  // 64, ", k83
-    LED_SLSH,  // 65, /, k04
-    LED_MINS,  // 66, -, ka5
-    LED_0,     // 67, 0, l01
-    LED_LGUI,  // 68, Gui_L, l11
-    LED_RSFT,  // 69, Sft_R, k97
-    LED_FN,    // 70, MO(1), l02
-    LED_LALT,  // 71, LED_LALT, l12
-    LED_SPC,   // 72, Space, k65
-    LED_RALT,  // 73, Alt_R, l03
-    LED_DEL,   // 74, Del, l13
-    LED_BSPC,  // 75, BSpc, k15
-    LED_BSLS,  // 76, \, l04
-    LED_F11,   // 77, F11, l14
-    LED_ENT,   // 78, Enter, k66
-    LED_F12,   // 79, F12, k05
-    LED_F9,    // 80, F9, l05
-    LED_F10,   // 81, F10, l15
-    LED_L1,    // 82, LED_L1, k75
-    LED_L2,    // 83, LED_L2, l06
-    LED_L3,    // 84, LED_L3, l16
-    LED_L4,    // 85, LED_L4, ka1
-    LED_L5,    // 86, LED_L5, k25
-    LED_L6,    // 87, LED_L6, l07
-    LED_L7,    // 88, LED_L7, l17
-    LED_L8,    // 89, LED_L8, k61
-    LED_R1,    // 90, LED_R1, k91
-    LED_R2,    // 91, LED_R2, l08
-    LED_R3,    // 92, LED_R3, l18
-    LED_R4,    // 93, LED_R4, ka2
-    LED_R5,    // 94, LED_R5, k35
-    LED_R6,    // 95, LED_R6, k03
-    LED_R7,    // 96, LED_R7, ka4
-    LED_R8     // 97, LED_R8, k73
+    LED_ESC,       // 0, ESC, k13
+    LED_GRV,       // 1, ~, k16
+    LED_TAB,       // 2, Tab, k11
+    LED_CAPS,      // 3, Caps, k21
+    LED_LSFT,      // 4, Sh_L, k00
+    LED_LCTL,      // 5, Ct_L, k06
+    LED_F1,        // 6, F1, k26
+    LED_1,         // 7, 1, k17
+    LED_Q,         // 8, Q, k10
+    LED_A,         // 9, A, k12
+    LED_Z,         // 10, Z, k14
+    LED_LWIN,      // 11, Win_L, k90
+    LED_F2,        // 12, F2, k36
+    LED_2,         // 13, 2, k27
+    LED_W,         // 14, W, k20
+    LED_S,         // 15, S, k22
+    LED_X,         // 16, X, k24
+    LED_LALT,      // 17, Alt_L, k93
+    LED_F3,        // 18, F3, k31
+    LED_3,         // 19, 3, k37
+    LED_E,         // 20, E, k30
+    LED_D,         // 21, D, k32
+    LED_C,         // 22, C, k34
+    LED_F4,        // 23, F4, k33
+    LED_4,         // 24, 4, k47
+    LED_R,         // 25, R, k40
+    LED_F,         // 26, F, k42
+    LED_V,         // 27, V, k44
+    LED_F5,        // 28, F5, k07
+    LED_5,         // 29, 5, k46
+    LED_T,         // 30, T, k41
+    LED_G,         // 31, G, k43
+    LED_B,         // 32, B, k45
+    LED_SPC,       // 33, SPACE, k94
+    LED_F6,        // 34, F6, k63
+    LED_6,         // 35, 6, k56
+    LED_Y,         // 36, Y, k51
+    LED_H,         // 37, H, k53
+    LED_N,         // 38, N, k55
+    LED_F7,        // 39, F7, k71
+    LED_7,         // 40, 7, k57
+    LED_U,         // 41, U, k50
+    LED_J,         // 42, J, k52
+    LED_M,         // 43, M, k54
+    LED_F8,        // 44, F8, k76
+    LED_8,         // 45, 8, k67
+    LED_I,         // 46, I, k60
+    LED_K,         // 47, K, k62
+    LED_COMM,      // 48, ,, k64
+    LED_RALT,      // 49, Alt_R, k95
+    LED_F9,        // 50, F9, ka6
+    LED_9,         // 51, 9, k77
+    LED_O,         // 52, O, k70
+    LED_L,         // 53, L, k72
+    LED_DOT,       // 54, ., k74
+    LED_FN,        // 55, FN, k92
+    LED_F10,       // 56, F10, ka7
+    LED_0,         // 57, 0, k87
+    LED_P,         // 58, P, k80
+    LED_SCLN,      // 59, ;, k82
+    LED_RSLSH,     // 60, ?, k85
+    LED_F11,       // 61, F11, ka3
+    LED_MINS,      // 62, -, k86
+    LED_LBRC,      // 63, [, k81
+    LED_QUOT,      // 64, ", k83
+    LED_RCTL,      // 65, Ct_R, k04
+    LED_F12,       // 66, F12, ka5
+    LED_BSLS,      // 93, \, ka2
+    LED_L1,        // 67, LED, l01
+    LED_R1,        // 68, LED, l11
+    LED_PRT,       // 69, Prt, k97  -- remapped to INS
+    LED_L2,        // 70, LED, l02
+    LED_R2,        // 71, LED, l12
+    LED_INS,       // 72, Del, k65
+    LED_L3,        // 73, LED, l03
+    LED_R3,        // 74, LED, l13
+    LED_DEL,       // 75, PgUp, k15
+    LED_L4,        // 76, LED, l04
+    LED_R4,        // 77, LED, l14
+    LED_EQL,       // 78, =, k66
+    LED_RIGHT,     // 79, Right, k05
+    LED_L5,        // 80, LED, l05
+    LED_R5,        // 81, LED, l15
+    LED_END,       // 82, End, k75
+    LED_L6,        // 83, LED, l06
+    LED_R6,        // 84, LED, l16
+    LED_BSPC,      // 85, BSpc, ka1
+    LED_HOME,      // 86, PgDn, k25
+    LED_L7,        // 87, LED, l07
+    LED_R7,        // 88, LED, l17
+    LED_RBRC,      // 89, ], k61
+    LED_RSFT,      // 90, Sh_R, k91
+    LED_L8,        // 91, LED, l08
+    LED_R8,        // 92, LED, l18
+    LED_UP,        // 94, Up, k35
+    LED_RBACKSLSH, // 60, ?, k85
+    LED_LEFT,      // 95, Left, k03
+    LED_ENT,       // 96, Enter, ka4
+    LED_DOWN       // 97, Down, k73
 };
+
+enum led_location_map_sorted {
+    SORTED_LED_ESC,  // 0, ESC, k13
+    SORTED_LED_F1,   // 6, F1, k26
+    SORTED_LED_F2,   // 12, F2, k36
+    SORTED_LED_F3,   // 18, F3, k31
+    SORTED_LED_F4,   // 23, F4, k33
+    SORTED_LED_F5,   // 28, F5, k07
+    SORTED_LED_F6,   // 34, F6, k63
+    SORTED_LED_F7,   // 39, F7, k71
+    SORTED_LED_F8,   // 44, F8, k76
+    SORTED_LED_F9,   // 50, F9, ka6
+    SORTED_LED_F10,  // 56, F10, ka7
+    SORTED_LED_F11,  // 61, F11, ka3
+    SORTED_LED_F12,  // 66, F12, ka5
+    SORTED_LED_PRT,  // 69, Prt, k97  -- remapped to INS
+    SORTED_LED_NONE, // rotary knob
+
+    SORTED_LED_GRV,  // 1, ~, k16
+    SORTED_LED_1,    // 7, 1, k17
+    SORTED_LED_2,    // 13, 2, k27
+    SORTED_LED_3,    // 19, 3, k37
+    SORTED_LED_4,    // 24, 4, k47
+    SORTED_LED_5,    // 29, 5, k46
+    SORTED_LED_6,    // 35, 6, k56
+    SORTED_LED_7,    // 40, 7, k57
+    SORTED_LED_8,    // 45, 8, k67
+    SORTED_LED_9,    // 51, 9, k77
+    SORTED_LED_0,    // 57, 0, k87
+    SORTED_LED_MINS, // 62, -, k86
+    SORTED_LED_EQL,  // 78, =, k66
+    SORTED_LED_BSPC, // 85, BSpc, ka1
+    SORTED_LED_INS,  // 72, Del, k65
+
+    SORTED_LED_TAB,  // 2, Tab, k11
+    SORTED_LED_Q,    // 8, Q, k10
+    SORTED_LED_W,    // 14, W, k20
+    SORTED_LED_E,    // 20, E, k30
+    SORTED_LED_R,    // 25, R, k40
+    SORTED_LED_T,    // 30, T, k41
+    SORTED_LED_Y,    // 36, Y, k51
+    SORTED_LED_U,    // 41, U, k50
+    SORTED_LED_I,    // 46, I, k60
+    SORTED_LED_O,    // 52, O, k70
+    SORTED_LED_P,    // 58, P, k80
+    SORTED_LED_LBRC, // 63, [, k81
+    SORTED_LED_RBRC, // 89, ], k61
+    SORTED_LED_DEL,  // 75, PgUp, k15 <--- teil von rechter SeitenLED
+
+    SORTED_LED_CAPS,      // 3, Caps, k21
+    SORTED_LED_A,         // 9, A, k12
+    SORTED_LED_S,         // 15, S, k22
+    SORTED_LED_D,         // 21, D, k32
+    SORTED_LED_F,         // 26, F, k42
+    SORTED_LED_G,         // 31, G, k43
+    SORTED_LED_H,         // 37, H, k53
+    SORTED_LED_J,         // 42, J, k52
+    SORTED_LED_K,         // 47, K, k62
+    SORTED_LED_L,         // 53, L, k72
+    SORTED_LED_SCLN,      // 59, ;, k82
+    SORTED_LED_QUOT,      // 64, ", k83
+    SORTED_LED_RBACKSLSH, // 80, LED, l05 MAYBE
+    SORTED_LED_ENT,       // 96, Enter, ka4
+    SORTED_LED_HOME,      // 86, PgDn, k25 <---
+
+    SORTED_LED_LSFT,  // 4, Sh_L, k00
+    SORTED_LED_BSLS,  // 93, \, ka2
+    SORTED_LED_Z,     // 10, Z, k14
+    SORTED_LED_X,     // 16, X, k24
+    SORTED_LED_C,     // 22, C, k34
+    SORTED_LED_V,     // 27, V, k44
+    SORTED_LED_B,     // 32, B, k45
+    SORTED_LED_N,     // 38, N, k55
+    SORTED_LED_M,     // 43, M, k54
+    SORTED_LED_COMM,  // 48, ,, k64
+    SORTED_LED_DOT,   // 54, ., k74
+    SORTED_LED_RSLSH, // 60, ?, k85
+    SORTED_LED_RSFT,  // 90, Sh_R, k91
+    SORTED_LED_UP,    // 94, Up, k35
+    SORTED_LED_END,   // 82, End, k75 <---
+
+    SORTED_LED_LCTL,  // 5, Ct_L, k06
+    SORTED_LED_LWIN,  // 11, Win_L, k90
+    SORTED_LED_LALT,  // 17, Alt_L, k93
+    SORTED_LED_SPC,   // 33, SPACE, k94
+    SORTED_LED_RALT,  // 49, Alt_R, k95
+    SORTED_LED_FN,    // 55, FN, k92
+    SORTED_LED_RCTL,  // 65, Ct_R, k04
+    SORTED_LED_LEFT,  // 95, Left, k03
+    SORTED_LED_DOWN,  // 97, Down, k73
+    SORTED_LED_RIGHT, // 79, Right, k05
+};
+
+uint8_t get_mapped_led_index(uint8_t sorted_index);
+
+extern const uint8_t led_location_map_sorted[];
+extern const uint8_t led_location_map[];
 
 const uint8_t LED_LIST_WASD[] = {LED_W, LED_A, LED_S, LED_D};
 
 const uint8_t LED_LIST_ARROWS[] = {LED_LEFT, LED_RIGHT, LED_UP, LED_DOWN};
 
-const uint8_t LED_LIST_FUNCROW[] = {LED_ESC, LED_F1, LED_F2, LED_F3, LED_F4, LED_F5, LED_F6, LED_F7, LED_F8, LED_F9, LED_F10, LED_F11, LED_F12, LED_DEL};
+const uint8_t LED_LIST_FUNCROW[] = {LED_ESC, LED_F1, LED_F2, LED_F3, LED_F4, LED_F5, LED_F6, LED_F7, LED_F8, LED_F9, LED_F10, LED_F11, LED_F12, LED_PRT};
 
 const uint8_t LED_LIST_NUMROW[] = {LED_GRV, LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7, LED_8, LED_9, LED_0, LED_MINS, LED_EQL, LED_BSPC, LED_DEL};
 
-const uint8_t LED_LIST_NUMPAD[] = {LED_7, LED_8, LED_9, LED_U, LED_I, LED_O, LED_J, LED_K, LED_L, LED_M, LED_COMM, LED_DOT};
+const uint8_t LED_LIST_LETTERS[] = {LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7, LED_8, LED_9, LED_0, LED_Q, LED_W, LED_E, LED_R, LED_T, LED_Y, LED_U, LED_I, LED_O, LED_P, LED_A, LED_S, LED_D, LED_F, LED_G, LED_H, LED_J, LED_K, LED_L, LED_Z, LED_X, LED_C, LED_V, LED_B, LED_N, LED_M};
+
+const uint8_t LED_LIST_NUMPAD[] = {LED_1, LED_2, LED_3, LED_4, LED_5, LED_6, LED_7, LED_8, LED_9, LED_0, LED_MINS, LED_EQL, LED_U, LED_I, LED_O, LED_P, LED_J, LED_K, LED_L, LED_SCLN, LED_ENT, LED_M, LED_COMM, LED_DOT, LED_RSLSH, LED_END, LED_RIGHT};
 
 const uint8_t LED_SIDE_LEFT[] = {LED_L1, LED_L2, LED_L3, LED_L4, LED_L5, LED_L6, LED_L7, LED_L8};
 
 const uint8_t LED_SIDE_RIGHT[] = {LED_R1, LED_R2, LED_R3, LED_R4, LED_R5, LED_R6, LED_R7, LED_R8};
+
+const uint8_t LED_LIST_GAMING[] = {LED_W, LED_A, LED_S, LED_D, LED_Q, LED_E, LED_R, LED_TAB, LED_CAPS, LED_F, LED_Z, LED_X, LED_C, LED_V, LED_SPC, LED_LCTL, LED_LSFT, LED_LEFT, LED_RIGHT, LED_UP, LED_DOWN};
+
+const uint8_t LED_LIST_CUSTOM_KEYCAPS[] = {LED_ESC, LED_F5, LED_F6, LED_F7, LED_F8, LED_PRT, LED_GRV, LED_TAB, LED_CAPS, LED_LSFT, LED_LCTL, LED_LWIN, LED_LALT, LED_RALT, LED_FN, LED_RCTL, LED_RSFT, LED_ENT, LED_BSPC, LED_INS, LED_DEL, LED_HOME, LED_END, LED_LEFT, LED_DOWN, LED_UP, LED_RIGHT};
 
 #endif
